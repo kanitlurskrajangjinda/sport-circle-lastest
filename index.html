@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sport Circle</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- External Fonts & Libraries -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.383.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Login Screen (100% English) -->
+  <div class="login-screen active" id="loginScreen">
+    <div class="login-card">
+      <div class="brand">
+        <div class="logo-lg">SC</div>
+        <h1>Sport Circle</h1>
+        <p>Online Sports Facility Booking &amp; Court Management System</p>
+      </div>
+      <div class="login-tabs">
+        <button class="active" onclick="switchLoginTab(this, 'login')">Sign In</button>
+        <button onclick="switchLoginTab(this, 'signup')">Sign Up</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com">
+        </div>
+        <div class="form-group" style="margin-bottom:20px">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="handleLogin()">Sign In</button>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div id="signupForm" style="display:none">
+        <div class="signup-avatar">
+          <div class="signup-avatar-pick" id="signUpAvatarPreview" role="button" tabindex="0" title="Choose profile photo"
+            onclick="openAvatarPicker('signup')"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAvatarPicker('signup');}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </div>
+          <input type="file" id="signUpAvatar" accept="image/*" hidden onchange="previewSignUpAvatar(this)">
+          <input type="file" id="signUpAvatarCamera" accept="image/*" capture="user" hidden
+            onchange="previewSignUpAvatar(this)">
+          <div class="signup-avatar-text">
+            <span>Profile Photo (Optional)</span>
+            <button type="button" id="signUpAvatarClear" class="avatar-remove-btn" style="display:none"
+              onclick="clearSignUpAvatar()">Remove</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="signUpName" placeholder="e.g. John Doe">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="signUpEmail" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="signUpPhone" placeholder="e.g. 0812345678">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="pw-input-wrap">
+            <input type="password" id="signUpPassword" placeholder="Create a strong password"
+              oninput="updatePasswordStrength(this.value)" autocomplete="new-password">
+            <button type="button" class="pw-toggle" id="signUpPasswordToggle"
+              onclick="togglePasswordVisibility('signUpPassword', this)" aria-label="Show password"
+              title="Show password"><svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg><svg class="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19" />
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+                <line x1="2" y1="2" x2="22" y2="22" />
+              </svg></button>
+          </div>
+          <div class="pw-strength" id="pwStrength">
+            <div class="pw-strength-head">
+              <span>Password Strength</span>
+              <span id="pwStrengthLabel" class="pw-strength-label">0% - Not entered</span>
+            </div>
+            <div class="pw-bar">
+              <div class="pw-bar-fill" id="pwBarFill"></div>
+            </div>
+            <ul class="pw-rules">
+              <li id="pwRuleLen">At least 8 characters long</li>
+              <li id="pwRuleUpper">At least 1 uppercase letter (A-Z)</li>
+              <li id="pwRuleNum">At least 1 number (0-9)</li>
+              <li id="pwRuleSym">At least 1 special symbol (e.g. ! @ # $ %)</li>
+            </ul>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="handleSignUp()">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div class="app-container" id="appShell" style="display:none">
+    <!-- Floating Mobile Nav Toggle Button -->
+    <button type="button" id="mobileNavToggleBtn" class="mobile-nav-toggle" onclick="toggleMobileNav()">
+      <span id="mobileNavToggleText">▼ Hide Menu</span>
+    </button>
+
+    <!-- Top Right Notification Bell -->
+    <div class="app-top-actions">
+      <button type="button" id="notifBellBtn" class="notif-bell-btn" onclick="toggleNotificationDrawer()"
+        title="Notifications" aria-label="Notifications">
+        <i data-lucide="bell" width="20" height="20"></i>
+        <span id="notifBadge" class="notif-badge" style="display:none;">0</span>
+      </button>
+    </div>
+
+    <!-- Left Sidebar / Mobile Bottom Navigation -->
+    <aside class="sidebar" id="mainSidebar">
+      <div class="sidebar-brand">
+        <div class="logo">SC</div>
+        <div>
+          <h1>Sport Circle</h1>
+          <p class="sidebar-brand-sub">Court &amp; Equipment Management</p>
+        </div>
+      </div>
+
+      <!-- User Menu -->
+      <div class="sidebar-section" id="navUser">
+        <div class="sidebar-section-label">User Menu</div>
+      </div>
+      <ul class="sidebar-nav" id="navUserLinks">
+        <li><a class="active" data-view="facilities" onclick="switchView('facilities')"><i
+              data-lucide="layout-grid"></i> Browse Facilities</a></li>
+        <li><a data-view="my-bookings" onclick="switchView('my-bookings')"><i data-lucide="calendar-check"></i>
+            My Bookings</a></li>
+        <li><a data-view="history" onclick="switchView('history')"><i data-lucide="clock"></i> Booking History</a></li>
+        <li><a data-view="profile" onclick="switchView('profile')"><i data-lucide="user-cog"></i> Profile</a></li>
+      </ul>
+
+      <!-- Platform Admin Menu (Strictly separated from Venue Owner operations) -->
+      <div class="sidebar-section" id="navAdmin" style="display:none">
+        <div class="sidebar-section-label">Platform Administration</div>
+      </div>
+      <ul class="sidebar-nav" id="navAdminLinks" style="display:none">
+        <li><a class="active" data-view="platform" data-admin-tab="all" onclick="openAdminModule('all', this)"><i data-lucide="globe"></i> Platform Overview</a></li>
+        <li><a data-view="platform" data-admin-tab="users" onclick="openAdminModule('users', this)"><i data-lucide="users"></i> User &amp; Role Management</a></li>
+        <li><a data-view="platform" data-admin-tab="issues" onclick="openAdminModule('issues', this)"><i data-lucide="flag"></i> System Issue Reports</a></li>
+        <li><a data-view="platform" data-admin-tab="audit" onclick="openAdminModule('audit', this)"><i data-lucide="shield-check"></i> Audit Logs &amp; Config</a></li>
+        <li class="nav-desktop-only"><a data-view="profile" onclick="switchView('profile')"><i data-lucide="user-cog"></i> Profile</a></li>
+      </ul>
+
+      <!-- Court Owner Menu -->
+      <div class="sidebar-section" id="navOwner" style="display:none">
+        <div class="sidebar-section-label">My Court Management</div>
+      </div>
+      <ul class="sidebar-nav" id="navOwnerLinks" style="display:none">
+        <li><a data-view="dashboard" onclick="switchView('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</a></li>
+        <li><a data-view="payments" onclick="switchView('payments')"><i data-lucide="credit-card"></i> Payment Verification</a></li>
+        <li class="nav-sublabel">Court Booking</li>
+        <li><a data-view="matrix" onclick="switchView('matrix')"><i data-lucide="calendar-days"></i> Booking Matrix</a></li>
+        <li><a data-view="manage-facilities" onclick="switchView('manage-facilities')"><i data-lucide="settings"></i> My Facilities</a></li>
+        <li class="nav-desktop-only"><a data-view="slots" onclick="switchView('slots')"><i data-lucide="lock"></i> Slot Management</a></li>
+        <li class="nav-desktop-only"><a data-view="profile" onclick="switchView('profile')"><i data-lucide="user-cog"></i> Profile</a></li>
+      </ul>
+
+      <!-- Staff Menu -->
+      <div class="sidebar-section" id="navStaff" style="display:none">
+        <div class="sidebar-section-label">Front Desk Service</div>
+      </div>
+      <ul class="sidebar-nav" id="navStaffLinks" style="display:none">
+        <li><a data-view="scanner" onclick="switchView('scanner')"><i data-lucide="scan-line"></i> QR Check-in</a></li>
+        <li><a data-view="payments" onclick="switchView('payments')"><i data-lucide="credit-card"></i>
+            Payment Verification</a></li>
+        <li><a data-view="profile" onclick="switchView('profile')"><i data-lucide="user-cog"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-user" style="justify-content: space-between; align-items: center; cursor: pointer;"
+        onclick="switchView('profile')">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="avatar" id="userAvatar">U</div>
+          <div class="user-info">
+            <div class="name" id="userName">User</div>
+            <div class="role" id="userRole">Administrator</div>
+          </div>
+        </div>
+        <button onclick="event.stopPropagation(); handleLogout()"
+          style="background: none; border: none; color: var(--error); cursor: pointer; padding: 4px;"
+          title="Log Out">
+          <i data-lucide="log-out" width="18" height="18"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- VIEW: Browse Facilities -->
+      <div class="view active" id="view-facilities">
+        <div class="page-header">
+          <h2>Find &amp; Book Sports Facilities</h2>
+          <p>Select your preferred sports venue and time slot</p>
+        </div>
+        <div class="filter-bar"
+          style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="filter-chip active" onclick="filterFacilities(this, 'all')">All Sports</button>
+            <button class="filter-chip" onclick="filterFacilities(this, 'football')">Football</button>
+            <button class="filter-chip" onclick="filterFacilities(this, 'badminton')">Badminton</button>
+            <button class="filter-chip" onclick="filterFacilities(this, 'basketball')">Basketball</button>
+            <button class="filter-chip" onclick="filterFacilities(this, 'futsal')">Futsal</button>
+            <button class="filter-chip" onclick="filterFacilities(this, 'volleyball')">Volleyball</button>
+          </div>
+
+          <div
+            style="display:flex; align-items:center; gap:8px; background:var(--surface); padding:6px 14px; border-radius:20px; border:1px solid var(--border);">
+            <span style="font-size:0.82rem; font-weight:600; color:var(--text-secondary); white-space:nowrap;">📍
+              Province:</span>
+            <select id="browseProvinceFilter" onchange="filterByProvince(this.value)"
+              style="border:none; background:transparent; font-size:0.85rem; font-weight:600; color:var(--text); outline:none; cursor:pointer; min-width:160px;">
+              <option value="all">All Provinces</option>
+            </select>
+          </div>
+        </div>
+        <div class="facilities-grid" id="facilitiesGrid"></div>
+      </div>
+
+      <!-- VIEW: Facility Booking -->
+      <div class="view" id="view-booking">
+        <div class="page-header" style="margin-bottom:16px">
+          <a style="font-size:0.88rem; color:var(--primary); cursor:pointer; text-decoration:none; font-weight:600"
+            onclick="switchView('facilities')">← Back to Facilities</a>
+        </div>
+        <div class="booking-detail">
+          <div class="booking-left">
+            <div class="facility-slider-container"
+              style="position: relative; border-radius: var(--radius-lg); width: 100%; aspect-ratio: 16 / 9; min-height: 240px; max-height: 520px; overflow: hidden; margin-bottom: 20px; background: #2a2a2a; box-shadow: var(--shadow-sm);">
+              <div id="bookingImageSlider"
+                style="display: flex; width: 100%; height: 100%; transition: transform 0.4s ease-in-out;"></div>
+              <button onclick="moveFacilitySlider(-1)"
+                style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; z-index: 2;">‹</button>
+              <button onclick="moveFacilitySlider(1)"
+                style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; z-index: 2;">›</button>
+              <div id="sliderDots"
+                style="position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 2;">
+              </div>
+            </div>
+
+            <h2 id="bookingTitle" style="margin-bottom: 10px; font-size: 1.65rem; font-weight: 800;">Facility Name</h2>
+            <div id="bookingMeta"
+              style="margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;"></div>
+
+            <div class="booking-facility-details"
+              style="margin: 16px 0 20px 0; padding: 16px; background: #fafafa; border-radius: 12px; border: 1px solid #eee;">
+              <h4 style="margin: 0 0 6px 0; font-size: 0.95rem; color: #333;">Facility Details</h4>
+              <p id="bookingDescription" style="margin: 0; color: #666; font-size: 0.9rem; line-height: 1.6;">-</p>
+
+              <h4 style="margin: 14px 0 8px 0; font-size: 0.95rem; color: #333;">Amenities</h4>
+              <div id="bookingAmenities" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+
+              <div id="bookingMapContainer"
+                style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #ddd; display: none;"></div>
+            </div>
+
+            <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:6px">1. Select Booking Date</h4>
+            <div
+              style="background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:16px; margin-bottom:20px">
+              <div class="calendar-header">
+                <button onclick="changeMonth(-1)">‹</button>
+                <h4 id="calendarMonth">October 2026</h4>
+                <button onclick="changeMonth(1)">›</button>
+              </div>
+              <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:4px">2. Select Available Time Slots</h4>
+            <p style="font-size:0.8rem; color:var(--text-tertiary); margin-bottom:8px">Tap to select one or multiple consecutive time slots</p>
+            <div class="time-slots-grid" id="timeSlotsGrid"></div>
+          </div>
+
+          <div class="booking-summary">
+            <h3 style="margin-top:0;">Booking Summary</h3>
+            <div class="summary-row">
+              <span class="label">Facility</span>
+              <span class="value" id="sumFacility">-</span>
+            </div>
+            <div class="summary-row">
+              <span class="label">Date</span>
+              <span class="value" id="sumDate">Please select a date</span>
+            </div>
+            <div class="summary-row">
+              <span class="label">Time Slot</span>
+              <span class="value" id="sumTime">Please select a time</span>
+            </div>
+            <div class="summary-row">
+              <span class="label">Total Duration</span>
+              <span class="value" id="sumDuration">-</span>
+            </div>
+
+            <div id="bookingAddonsSection"
+              style="display:none; margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-light);">
+              <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">📦 Add-on Equipment
+                (Rent / Buy)</h4>
+              <div id="bookingAddonsList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+
+            <div class="total-row"
+              style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); font-weight:700;">
+              <span>Net Total</span>
+              <span id="sumTotal" style="color:var(--primary); font-size:1.25rem;">฿0</span>
+            </div>
+
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid var(--border-light);">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-size: 0.85rem; font-weight: 600;">Customer Full Name <span
+                  style="color:red;">*</span></label>
+              <input type="text" id="bookingCustomerName" placeholder="e.g. John Doe"
+                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+              <label style="font-size: 0.85rem; font-weight: 600;">Contact Phone Number <span
+                  style="color:red;">*</span></label>
+              <input type="tel" id="bookingCustomerPhone" placeholder="e.g. 0812345678"
+                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;">
+            </div>
+
+            <div id="paymentInfoBox"
+              style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e9ecef; font-size: 0.85rem;">
+              <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: #333;">Bank Transfer Account</h4>
+              <p style="margin: 0 0 4px 0; color: #555;">Bank / PromptPay: <strong id="displayBankName">-</strong></p>
+              <p style="margin: 0 0 4px 0; color: #555;">Account No.: <strong id="displayBankAccount">-</strong></p>
+              <p style="margin: 0 0 4px 0; color: #555;">Account Name: <strong id="displayAccountName">-</strong></p>
+              <p style="margin: 8px 0 0 0; color: #d32f2f; font-weight: 700; font-size: 0.95rem; text-align: center;">
+                Amount Due: <span id="displayTransferAmount">฿0</span></p>
+            </div>
+
+            <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:8px;">Upload Payment Slip
+              <span style="color:red;">*</span></label>
+            <div class="upload-area" id="slipUploadBox" onclick="document.getElementById('slipUpload').click()">
+              <i data-lucide="upload-cloud" width="24" height="24"></i>
+              <p style="margin:4px 0 0; font-size:0.85rem;">Click to upload transfer slip</p>
+              <p style="margin:2px 0 0; font-size:0.75rem; color:var(--text-tertiary);">Supports PNG, JPG up to
+                5MB</p>
+            </div>
+            <input type="file" id="slipUpload" style="display:none" accept="image/*" onchange="handleSlipSelect(event)">
+
+            <button id="confirmBookingBtn" class="btn btn-primary"
+              style="width: 100%; margin-top: 20px; padding: 12px; font-size: 1rem; font-weight: 600; border-radius: 8px;"
+              onclick="confirmBooking()">
+              Confirm Booking
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: My Bookings -->
+      <div class="view" id="view-my-bookings">
+        <div class="page-header">
+          <h2>My Bookings</h2>
+          <p>Upcoming reservations and E-Tickets for venue entry</p>
+        </div>
+        <div id="myBookingsList" class="booking-list"></div>
+      </div>
+
+      <!-- VIEW: Booking History -->
+      <div class="view" id="view-history">
+        <div class="page-header">
+          <h2>Booking History</h2>
+          <p>Completed and past reservations</p>
+        </div>
+        <div id="historyList"></div>
+      </div>
+
+      <!-- ===================================================================
+           VIEW: Court Owner Dashboard & Analytics
+           =================================================================== -->
+      <div class="view" id="view-dashboard">
+
+        <!-- ── Header ── -->
+        <div class="ed-header">
+          <div class="ed-h-left">
+            <div class="ed-title-row">
+              <h2>Sports Equipment &amp; Operations Dashboard</h2><span class="ed-live"><i></i>Live Real-time</span>
+            </div>
+            <p id="dashDateSubtitle">-</p>
+          </div>
+          <div class="ed-filters">
+            <div class="ed-fsel"><label>Report Period</label>
+              <select id="dashReportPeriodType" onchange="handleReportPeriodChange()">
+                <option value="daily">Daily Report</option>
+                <option value="monthly" selected>Monthly Summary</option>
+                <option value="yearly">Yearly Summary</option>
+                <option value="custom">Custom Date Range</option>
+                <option value="all">All Time</option>
+              </select>
+            </div>
+            <div class="ed-fsel" id="dashMonthPickerWrap"><label>Month</label><select id="dashReportMonth"
+                onchange="renderDashboardStats()"></select></div>
+            <div class="ed-fsel" id="dashYearPickerWrap"><label>Year</label><select id="dashReportYear"
+                onchange="renderDashboardStats()"></select></div>
+            <div class="ed-fsel" id="dashDailyPickerWrap" style="display:none;"><label>Date</label><input
+                type="date" id="dashRealtimeDate" onchange="renderDashboardStats()"></div>
+            <div class="ed-fsel" id="dashCustomStartWrap" style="display:none;"><label>Start Date</label><input
+                type="date" id="dashFilterStartDate" onchange="renderDashboardStats()"></div>
+            <div class="ed-fsel" id="dashCustomEndWrap" style="display:none;"><label>End Date</label><input type="date"
+                id="dashFilterEndDate" onchange="renderDashboardStats()"></div>
+            <div class="ed-fsel" style="min-width:170px;"><label>Filter by Facility</label>
+              <select id="dashFilterFacility" onchange="renderDashboardStats()">
+                <option value="all">All Managed Facilities</option>
+              </select>
+            </div>
+            <button type="button" class="ed-clear" onclick="resetDashboardFilters()">Reset Filters</button>
+          </div>
+          <div class="ed-h-right">
+            <div class="ed-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input type="text" id="dashSearchInput" placeholder="Search equipment or customer..." oninput="edRender()">
+            </div>
+            <button type="button" class="ed-export" data-act="pdf"><i data-lucide="printer" width="15" height="15"></i>
+              PDF</button>
+            <button type="button" class="ed-export docx" data-act="docx"><i data-lucide="file-text" width="15"
+                height="15"></i> DOCX</button>
+          </div>
+        </div>
+
+        <div class="ed-banner" id="edBanner" style="display:none;"></div>
+
+        <!-- ── Quick Actions ── -->
+        <div class="ed-quick">
+          <div class="l"><span>Quick Actions:</span>
+            <button type="button" class="ed-btn blue" data-act="new-eq"><i data-lucide="plus-circle" width="16"
+                height="16"></i> + Add Equipment</button>
+            <button type="button" class="ed-btn amber" data-act="new-incident"><i data-lucide="alert-triangle"
+                width="16" height="16"></i> Report Damage / Loss</button>
+          </div>
+          <button type="button" class="ed-btn green" data-act="close-shift"><i data-lucide="calculator" width="16"
+              height="16"></i> Close Shift &amp; Cash Count</button>
+        </div>
+
+        <!-- ── KPI ── -->
+        <div class="ed-kpis">
+          <div class="ed-kpi">
+            <div class="ed-kpi-top"><span class="lbl">Net Equipment Revenue (Period)</span><span class="ico green"><i
+                  data-lucide="circle-dollar-sign"></i></span></div>
+            <div class="val green" id="edK1Val">฿0</div>
+            <div class="ed-kpi-sub"><span id="edK1a">Rentals: ฿0</span><b id="edK1b">Sales: ฿0</b></div>
+          </div>
+          <div class="ed-kpi" data-act="goto-tab" data-tab="2">
+            <div class="ed-kpi-top"><span class="lbl">Currently Rented (Real-time)</span><span class="ico blue"><i
+                  data-lucide="clock"></i></span></div>
+            <div class="val blue"><span id="edK2Val">0 items</span><span class="ed-pill-red" id="edK2Badge"></span></div>
+            <div class="ed-kpi-sub"><span id="edK2a">Deposits Held: ฿0</span><b class="lnk">View Rentals ›</b></div>
+          </div>
+          <div class="ed-kpi" data-act="goto-tab" data-tab="1">
+            <div class="ed-kpi-top"><span class="lbl">Total Inventory Status</span><span class="ico purple"><i
+                  data-lucide="package"></i></span></div>
+            <div class="val dark" id="edK3Val">0 items</div>
+            <div class="ed-kpi-sub"><b class="ok" id="edK3a">Available: 0 items</b><b class="warn" id="edK3b">Low Stock: 0
+                items</b></div>
+          </div>
+          <div class="ed-kpi" data-act="goto-tab" data-tab="3">
+            <div class="ed-kpi-top"><span class="lbl">Damaged / Repair / Fines</span><span class="ico red"><i
+                  data-lucide="wrench"></i></span></div>
+            <div class="val red" id="edK4Val">0 items</div>
+            <div class="ed-kpi-sub"><span id="edK4a">Total Fines: ฿0</span><b class="warn" id="edK4b">Pending Repair: 0 items</b>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 6 Tabs ── -->
+        <div class="ed-card">
+          <div class="ed-tabs">
+            <button type="button" class="ed-tab-btn active" data-tab="1" onclick="switchDashTab(1)"><i
+                data-lucide="boxes"></i> 1. Inventory &amp; Retail</button>
+            <button type="button" class="ed-tab-btn" data-tab="2" onclick="switchDashTab(2)"><i
+                data-lucide="repeat"></i> 2. Active Rentals &amp; Returns</button>
+            <button type="button" class="ed-tab-btn" data-tab="3" onclick="switchDashTab(3)"><i
+                data-lucide="alert-circle"></i> 3. Damage / Repair &amp; Fines</button>
+            <button type="button" class="ed-tab-btn" data-tab="4" onclick="switchDashTab(4)"><i
+                data-lucide="wallet"></i> 4. Cash Shift &amp; Summary</button>
+            <button type="button" class="ed-tab-btn" data-tab="5" onclick="switchDashTab(5)"><i
+                data-lucide="receipt"></i> 5. Customer Folios</button>
+            <button type="button" class="ed-tab-btn" data-tab="6" onclick="switchDashTab(6)"><i
+                data-lucide="pie-chart"></i> 6. Analytics &amp; Overview</button>
+          </div>
+          <div class="ed-pane active" id="edPane1">
+            <div class="ed-empty-block">Loading data...</div>
+          </div>
+          <div class="ed-pane" id="edPane2"></div>
+          <div class="ed-pane" id="edPane3"></div>
+          <div class="ed-pane" id="edPane4"></div>
+          <div class="ed-pane" id="edPane5"></div>
+          <div class="ed-pane" id="edPane6"></div>
+        </div>
+      </div> <!-- /view-dashboard -->
+
+      <!-- VIEW: Booking Matrix & Check-in -->
+      <div class="view" id="view-matrix">
+        <div class="dash-section-card matrix-card-container" style="margin-bottom:0;">
+
+          <div class="matrix-card-header">
+
+            <div>
+
+              <div style="display:flex; align-items:center; gap:8px;">
+
+                <h3 style="margin:0; font-size:1.25rem; font-weight:800; color:var(--text);" id="matrixSectionTitle">
+                  Court Schedule &amp; Live Status</h3>
+
+                <span class="matrix-realtime-badge">Real-time</span>
+
+              </div>
+
+              <p style="margin:4px 0 0 0; font-size:0.85rem; color:var(--text-secondary);">
+                Click any time slot to view details, add equipment, check in customers, or manage cancelled slots</p>
+
+            </div>
+
+            <div class="matrix-header-controls">
+
+              <div class="matrix-timerange-pills">
+
+                <button type="button" class="timerange-pill active" id="pillRangeEvening"
+                  onclick="setMatrixTimeRange('evening', this)">16:00 - 22:00 (Evening)</button>
+
+                <button type="button" class="timerange-pill" id="pillRangeMorning"
+                  onclick="setMatrixTimeRange('morning', this)">08:00 - 16:00 (Daytime)</button>
+
+                <button type="button" class="timerange-pill" id="pillRangeAll"
+                  onclick="setMatrixTimeRange('all', this)">All Day (06:00 - 23:00)</button>
+
+              </div>
+
+              <div class="matrix-date-nav">
+
+                <button type="button" class="btn btn-secondary btn-icon" onclick="changeMatrixDate(-1)"
+                  title="Previous Day" style="padding:6px 10px;">◀</button>
+
+                <button type="button" class="btn btn-secondary" onclick="setMatrixDateToday()"
+                  style="font-weight:600; font-size:0.82rem; padding:6px 12px;">📅 Today</button>
+
+                <button type="button" class="btn btn-secondary btn-icon" onclick="changeMatrixDate(1)" title="Next Day"
+                  style="padding:6px 10px;">▶</button>
+
+                <input type="date" id="dashMatrixDatePicker" onchange="syncMatrixDate(this.value)"
+                  class="matrix-date-input">
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="matrix-legend-bar">
+
+            <div class="matrix-legend-items">
+
+              <span class="matrix-legend-item"><span class="legend-dot dot-booked"></span> Booked</span>
+
+              <span class="matrix-legend-item"><span class="legend-dot dot-pending"></span> Pending Verification</span>
+
+              <span class="matrix-legend-item"><span class="legend-dot dot-available"></span> Available</span>
+
+              <span class="matrix-legend-item"><span class="legend-dot dot-cancelled"></span> Cancelled</span>
+
+            </div>
+
+            <div class="matrix-court-filter-wrap">
+
+              <select id="dashMatrixCourtFilter" onchange="handleMatrixCourtFilterChange(this.value)"
+                class="matrix-court-select">
+
+                <option value="all">Show All Facilities</option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+          <div class="matrix-table-scroll-wrap">
+
+            <div id="dashMultiCourtMatrix">
+
+              <div style="text-align:center; padding:32px; color:var(--text-tertiary);">Loading real-time booking schedule and court status...</div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- VIEW: Manage Facilities -->
+      <div class="view" id="view-manage-facilities">
+        <div class="page-header flex items-center" style="justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h2 id="manageFacTitle">Manage Facilities &amp; Equipment</h2>
+            <p id="manageFacSubtitle">Add, edit, or manage add-on equipment inventory for each facility</p>
+          </div>
+          <button id="addFacilityBtn" class="btn btn-primary" onclick="openAddFacilityModal()"><i data-lucide="plus" width="16"
+              height="16"></i> Add New Facility</button>
+        </div>
+        <div
+          style="background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius-md); overflow:hidden">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Facility Name</th>
+                <th>Sport Type</th>
+                <th>Price / Hour</th>
+                <th>Status</th>
+                <th id="facOwnerTh" style="display:none">Court Owner</th>
+                <th id="facActionsTh">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="facilitiesTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW: (Admin) Platform Overview -->
+      <div class="view" id="view-platform">
+        <div class="page-header">
+          <h2>Platform Administration &amp; System Overview</h2>
+          <p>System-wide KPIs, user role governance, issue reports, and read-only audit logs (System Administrator only)</p>
+        </div>
+        <div id="platformKpis" class="plat-kpis"></div>
+        <div id="platformOwnersSection">
+          <h3 style="margin:24px 0 10px;">Facility Owners Summary</h3>
+          <div style="background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius-md); overflow:hidden">
+            <table class="data-table">
+              <thead><tr><th>Court Owner</th><th>Facilities</th><th>Total Bookings</th><th>Confirmed Revenue</th></tr></thead>
+              <tbody id="platformOwnerTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: (Admin) User & Role Management -->
+      <div class="view" id="view-users">
+        <div class="page-header">
+          <h2>User &amp; Role Management</h2>
+          <p>Search users, inspect account details, and assign roles with self-demotion protection (Admin only)</p>
+        </div>
+        <div class="users-toolbar">
+          <div class="users-search-wrap">
+            <i data-lucide="search"></i>
+            <input type="text" id="usersSearchInput" class="users-search" placeholder="Search by name, email, or phone..." oninput="renderUsersTable()">
+          </div>
+          <select id="usersRoleFilter" class="users-filter" onchange="renderUsersTable()">
+            <option value="all">All Roles</option>
+            <option value="user">User (Customer)</option>
+            <option value="owner">Owner (Facility Owner)</option>
+            <option value="staff">Staff (Front Desk)</option>
+            <option value="admin">Admin (System Admin)</option>
+          </select>
+        </div>
+        <div class="users-card">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>Email</th><th>Phone</th><th style="width:240px;">System Role</th></tr></thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW: Payment Verification -->
+      <div class="view" id="view-payments">
+        <div class="page-header">
+          <h2>Payment Verification &amp; Booking Approval</h2>
+          <p>Verify transfer slips, approve reservations, or check in customers</p>
+        </div>
+
+        <div
+          style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+          <!-- Main status tabs -->
+          <div class="payment-tabs" style="display: flex; gap: 8px;">
+            <button id="tab-pending" onclick="filterPayments('pending')" class="btn"
+              style="background: var(--primary); color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer;">Pending Verification</button>
+            <button id="tab-approved" onclick="filterPayments('approved')" class="btn"
+              style="background: var(--bg-surface); color: var(--text); border: 1px solid var(--border); padding: 6px 16px; border-radius: 6px; cursor: pointer;">Approved
+              (All)</button>
+            <button id="tab-rejected" onclick="filterPayments('rejected')" class="btn"
+              style="background: var(--bg-surface); color: var(--text); border: 1px solid var(--border); padding: 6px 16px; border-radius: 6px; cursor: pointer;">Cancelled / Rejected</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <!-- Sub-status filter for Approved tab -->
+            <div id="approvedSubFilter"
+              style="display:none; align-items:center; gap:10px; background:#f0fdf4; padding:6px 14px; border-radius:8px; border:1px solid #bbf7d0;">
+              <label style="font-size:0.8rem; font-weight:700; color:#16a34a; margin:0;">Status Filter:</label>
+              <select id="paymentSubFilterStatus" onchange="renderPaymentsTable()"
+                style="padding:4px 8px; border:1px solid #86efac; border-radius:6px; font-size:0.82rem; color:#15803d; background:#ffffff; outline:none; font-weight:600;">
+                <option value="all">Show All</option>
+                <option value="waiting_checkin">Awaiting Check-in</option>
+                <option value="completed">Checked In (Completed)</option>
+              </select>
+            </div>
+
+            <!-- Facility filter dropdown -->
+            <div
+              style="display:flex; align-items:center; gap:10px; background:var(--surface); padding:8px 14px; border-radius:8px; border:1px solid var(--border-light);">
+              <label
+                style="font-size:0.82rem; font-weight:600; color:var(--text-secondary); white-space:nowrap; margin:0;">Facility:</label>
+              <select id="paymentFilterFacility" onchange="renderPaymentsTable()"
+                style="padding:6px 12px; border:1px solid var(--border); border-radius:6px; font-size:0.85rem; min-width:180px; background:var(--bg); outline:none;">
+                <option value="all">🏟️ Show All Facilities</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+
+        <div
+          style="background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius-md); overflow:hidden;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Bill ID</th>
+                <th>Customer Info</th>
+                <th>Facility &amp; Booked Time</th>
+                <th>Amount</th>
+                <th>Payment Slip</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW: QR Check-in Scanner (Staff) -->
+      <div class="view" id="view-scanner">
+        <div class="page-header">
+          <h2>QR Scan / Search for Check-in</h2>
+          <p>Search by phone number, customer name, or bill ID to check in customers</p>
+        </div>
+        <div class="scanner-area" style="max-width:720px; margin:0 auto; text-align:left;">
+          <div class="form-group">
+            <label>Search Today's Bookings / Scan Customer E-Ticket QR</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <input type="text" id="scannerQuery" placeholder="Phone / Name / Bill ID / Scan QR"
+                onkeydown="if(event.key==='Enter'){event.preventDefault(); searchCheckInBookings();}"
+                style="flex:1; min-width:200px;">
+              <button type="button" class="btn btn-primary" onclick="searchCheckInBookings()">Search</button>
+              <button type="button" id="cameraScanBtn" class="btn btn-secondary"
+                onclick="toggleCameraQrScan()">📷 Scan QR with Camera</button>
+            </div>
+            <div id="qrCameraReader"
+              style="display:none; max-width:360px; margin:14px auto; border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+            </div>
+            <p style="font-size:0.78rem; color:var(--text-tertiary); margin-top:6px;">
+              💡 Ask the customer to open their E-Ticket from "My Bookings" and scan the QR code to verify identity (contains Bill ID, Name, and Phone).</p>
+          </div>
+          <div id="scannerResults"></div>
+        </div>
+      </div>
+
+      <!-- VIEW: Slot Management -->
+      <div class="view" id="view-slots">
+        <div class="page-header">
+          <h2>Slot &amp; Walk-in Management</h2>
+          <p>Manage daily court schedules, check in customers, record phone/walk-in bookings, and block time slots</p>
+        </div>
+
+        <!-- Facility & Date Selector Bar -->
+        <div
+          style="background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:16px; margin-bottom:20px; display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+          <div class="form-group" style="margin-bottom:0; flex:1; min-width:220px;">
+            <label>Select Facility</label>
+            <select id="slotManageFacility" onchange="loadSlotManagementData()"></select>
+          </div>
+          <div class="form-group" style="margin-bottom:0; flex:1; min-width:180px;">
+            <label>Select Date</label>
+            <input type="date" id="slotManageDate" onchange="loadSlotManagementData()">
+          </div>
+          <button class="btn btn-secondary" onclick="loadSlotManagementData()" style="height:42px;">🔄
+            Refresh Schedule</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1.35fr 1fr; gap:20px; align-items:start;">
+
+          <!-- Left Column: Daily Schedule -->
+          <div
+            style="background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="font-size:1rem; font-weight:600; margin:0;">📅 Daily Schedule (06:00 - 22:00)</h3>
+              <span style="font-size:0.78rem; color:var(--text-secondary);">Check in customers or unblock slots directly</span>
+            </div>
+            <div id="adminDailyScheduleList" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+
+          <!-- Right Column: Walk-in Booking & Block Slot Forms -->
+          <div style="display:flex; flex-direction:column; gap:20px;">
+
+            <!-- Box 1: Phone / Walk-in Booking -->
+            <div
+              style="background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:20px; border-top:4px solid var(--primary);">
+              <h3 style="font-size:0.98rem; font-weight:600; margin-bottom:4px;">📞 Record Customer Booking (Phone /
+                Walk-in)</h3>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:14px;">Adds reservation immediately
+                (Approved &amp; ready for check-in)</p>
+
+              <div class="form-group">
+                <label>Customer Name <span style="color:red">*</span></label>
+                <input type="text" id="walkinCustomerName" placeholder="e.g. John Doe (Phone Booking)">
+              </div>
+              <div class="form-group">
+                <label>Phone Number <span style="color:red">*</span></label>
+                <input type="tel" id="walkinCustomerPhone" placeholder="e.g. 0812345678">
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group">
+                  <label>Start Time</label>
+                  <select id="walkinStartTime"></select>
+                </div>
+                <div class="form-group">
+                  <label>End Time</label>
+                  <select id="walkinEndTime"></select>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-block" onclick="submitAdminWalkinBooking()">+
+                Save Customer Booking</button>
+            </div>
+
+            <!-- Box 2: Block Time Slots -->
+            <div
+              style="background:var(--surface); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:20px; border-top:4px solid #f59e0b;">
+              <h3 style="font-size:0.98rem; font-weight:600; margin-bottom:4px;">🔒 Block Time Slots</h3>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:14px;">
+                Prevent online customer bookings during selected hours</p>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group">
+                  <label>From Time</label>
+                  <select id="blockStartTime"></select>
+                </div>
+                <div class="form-group">
+                  <label>To Time</label>
+                  <select id="blockEndTime"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Reason</label>
+                <select id="blockReason">
+                  <option value="ปิดปรับปรุง (Maintenance)">Maintenance</option>
+                  <option value="จัดกิจกรรมพิเศษ (Event Reserved)">Event Reserved</option>
+                  <option value="พักสนาม (Staff / Court Break)">Staff / Court Break</option>
+                </select>
+              </div>
+              <button class="btn btn-block" style="background:#f59e0b; color:white;" onclick="submitTimeBlock()">🔒
+                Block Selected Slot</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: User Profile & Account Settings -->
+      <div class="view" id="view-profile">
+        <div style="max-width: 980px; margin: 0 auto;">
+          <div class="page-header">
+            <h2>Profile &amp; Account Settings</h2>
+            <p>Update your personal details, email, password, or sign out</p>
+          </div>
+
+          <!-- Current Profile Card + Logout Button -->
+          <div
+            style="background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; align-items: center; gap: 18px;">
+              <div class="avatar-edit-wrap">
+                <div id="profilePageAvatar"
+                  style="width: 64px; height: 64px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; box-shadow: 0 4px 12px rgba(139,37,34,0.25);">
+                  U</div>
+                <button type="button" class="avatar-edit-btn" onclick="openAvatarPicker('profile')"
+                  title="Change profile photo"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg></button>
+                <input type="file" id="profileAvatarInput" accept="image/*" hidden
+                  onchange="handleProfileAvatarChange(this)">
+                <input type="file" id="profileAvatarCamera" accept="image/*" capture="user" hidden
+                  onchange="handleProfileAvatarChange(this)">
+              </div>
+              <div>
+                <h3 id="profilePageNameDisplay" style="margin: 0; font-size: 1.25rem; font-weight: 700;">User</h3>
+                <div id="profilePageEmailDisplay"
+                  style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 2px;">user@email.com</div>
+                <span id="profilePageRoleBadge"
+                  style="display: inline-block; margin-top: 6px; background: var(--primary-lighter); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700;">User</span>
+                <div><button type="button" id="profileAvatarRemoveBtn" class="avatar-remove-btn" style="display:none"
+                    onclick="removeProfileAvatar()">Remove Profile Photo</button></div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-error" onclick="handleLogout()"
+              style="padding: 10px 20px; font-weight: 600; border-radius: 8px;">
+              <i data-lucide="log-out" width="16" height="16"></i> Log Out
+            </button>
+          </div>
+
+          <!-- 2-Column Grid -->
+          <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; align-items: stretch;">
+
+            <!-- Left Column: Edit Personal Info -->
+            <div
+              style="background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 26px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm);">
+              <div>
+                <h3
+                  style="margin: 0 0 18px 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light);">
+                  📝 Edit Personal Information
+                </h3>
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" id="profileEditName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                  <label>Phone Number</label>
+                  <input type="tel" id="profileEditPhone" placeholder="e.g. 0812345678">
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" id="profileEditEmail" placeholder="you@example.com">
+                </div>
+              </div>
+              <button type="button" id="saveProfileBtn" class="btn btn-primary btn-block"
+                style="margin-top: 12px; padding: 12px;" onclick="saveProfileInfo()">
+                💾 Save Profile Changes
+              </button>
+            </div>
+
+            <!-- Right Column: Change Password -->
+            <div
+              style="background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 26px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm);">
+              <div>
+                <h3
+                  style="margin: 0 0 18px 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light);">
+                  🔒 Change Password
+                </h3>
+                <div class="form-group">
+                  <label>Current Password <span style="color: var(--error);">*</span></label>
+                  <input type="password" id="profileOldPassword" placeholder="Enter current password to verify">
+                </div>
+                <div class="form-group">
+                  <label>New Password (at least 6 characters) <span style="color: var(--error);">*</span></label>
+                  <input type="password" id="profileNewPassword" placeholder="Enter new password">
+                </div>
+                <div class="form-group">
+                  <label>Confirm New Password <span style="color: var(--error);">*</span></label>
+                  <input type="password" id="profileConfirmPassword" placeholder="Re-enter new password">
+                </div>
+              </div>
+              <button type="button" id="savePasswordBtn" class="btn btn-secondary btn-block"
+                style="margin-top: 12px; padding: 12px; border-color: var(--primary); color: var(--primary); font-weight: 600;"
+                onclick="changeUserPassword()">
+                🔑 Update Password
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Add Facility Modal -->
+  <div class="modal-overlay" id="addFacilityModal">
+    <div class="modal">
+      <h3>Add New Facility</h3>
+
+      <!-- 1. Basic Facility Information -->
+      <div class="form-group">
+        <label>Facility Name</label>
+        <input type="text" id="addFieldName" placeholder="e.g. Football Field B">
+      </div>
+      <div class="form-group">
+        <label>Sport Type</label>
+        <select id="addFieldSport">
+          <option value="football">Football</option>
+          <option value="badminton">Badminton</option>
+          <option value="basketball">Basketball</option>
+          <option value="futsal">Futsal</option>
+          <option value="volleyball">Volleyball</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Price per Hour (฿)</label>
+        <input type="number" id="addFieldPrice" placeholder="500">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="addFieldStatus">
+          <option value="available">Available</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+      </div>
+
+      <!-- Province (77 Provinces) & Google Maps URL -->
+      <div class="form-group">
+        <label>Province <span style="color:red">*</span></label>
+        <select id="addFieldProvince"></select>
+      </div>
+      <div class="form-group">
+        <label>Location Link (Google Maps URL)</label>
+        <input type="url" id="addFieldMapUrl" placeholder="e.g. https://maps.app.goo.gl/... ">
+      </div>
+
+      <!-- 2. Receiving Bank Account -->
+      <div
+        style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 15px;">
+        <h4 style="margin: 0 0 10px 0; font-size: 0.9rem;">Facility Bank Account</h4>
+        <div class="form-group">
+          <label style="font-size: 0.8rem;">Bank / PromptPay</label>
+          <select id="addFieldBankName">
+            <option value="">-- Select Bank --</option>
+            <option value="PromptPay (พร้อมเพย์)">PromptPay</option>
+            <option value="KBank (กสิกรไทย)">Kasikornbank (KBank)</option>
+            <option value="SCB (ไทยพาณิชย์)">Siam Commercial Bank (SCB)</option>
+            <option value="BBL (กรุงเทพ)">Bangkok Bank (BBL)</option>
+            <option value="KTB (กรุงไทย)">Krungthai Bank (KTB)</option>
+            <option value="BAY (กรุงศรี)">Bank of Ayudhya (Krungsri / BAY)</option>
+            <option value="TTB (ทหารไทยธนชาต)">TMBThanachart Bank (ttb)</option>
+            <option value="GSB (ออมสิน)">Government Savings Bank (GSB)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="font-size: 0.8rem;">Account No. / PromptPay ID</label>
+          <input type="text" id="addFieldBankAccount" placeholder="e.g. 012-3-45678-9 or 0812345678">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.8rem;">Account Name</label>
+          <input type="text" id="addFieldAccountName" placeholder="e.g. John Doe">
+        </div>
+      </div>
+
+      <!-- 3. Facility Description -->
+      <div class="form-group" style="margin-top: 15px;">
+        <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 5px;">Facility Description</label>
+        <textarea id="newFacilityDesc" placeholder="Enter details about the facility..."
+          style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: vertical; min-height: 80px;"></textarea>
+      </div>
+
+      <!-- 4. Amenities -->
+      <div class="form-group" style="margin-top: 15px;">
+        <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block;">Amenities</label>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" name="facilityAmenity" value="ที่จอดรถยนต์"
+              style="accent-color: #8B2522; width: 16px; height: 16px;">
+            <span>🚗 Car Parking</span>
+          </label>
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" name="facilityAmenity" value="ห้องน้ำในตัว"
+              style="accent-color: #8B2522; width: 16px; height: 16px;">
+            <span>🚻 Restrooms</span>
+          </label>
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" name="facilityAmenity" value="ร้านสะดวกซื้อใกล้ๆ"
+              style="accent-color: #8B2522; width: 16px; height: 16px;">
+            <span>🏪 Nearby Convenience Store</span>
+          </label>
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" name="facilityAmenity" value="อุปกรณ์ให้ยืม"
+              style="accent-color: #8B2522; width: 16px; height: 16px;">
+            <span>🏸 Equipment Rental</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 5. Image Upload -->
+      <div class="form-group">
+        <label>Facility Images (Max 4)</label>
+        <div class="upload-area" id="facilityImageUploadBox"
+          onclick="document.getElementById('facilityImageUpload').click()" style="padding:20px; text-align: center;">
+          <i data-lucide="image" width="24" height="24"></i>
+          <p>Click to upload photos</p>
+          <p style="font-size:0.72rem; color:var(--text-tertiary); margin-top:4px">PNG, JPG up to 5MB (Max 4 images)</p>
+        </div>
+        <input type="file" id="facilityImageUpload" style="display:none" accept="image/*" multiple
+          onchange="handleFacilityImagesSelect(event)">
+        <div id="facilityImagePreviewList"
+          style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; justify-content: center;"></div>
+      </div>
+
+      <div class="flex gap-8 mt-16">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('addFacilityModal')">Cancel</button>
+        <button class="btn btn-primary" style="flex:1" onclick="submitNewFacility()">Add Facility</button>
+      </div>
+    </div>
+  </div>
+  <!-- 🟢 Edit Facility Modal -->
+  <div class="modal-overlay" id="editFacilityModal">
+    <div class="modal">
+      <h3>Edit Facility</h3>
+      <input type="hidden" id="editFacilityId">
+
+      <!-- 1. Basic Facility Information -->
+      <div class="form-group">
+        <label>Facility Name</label>
+        <input type="text" id="editFieldName" placeholder="e.g. Football Field B">
+      </div>
+      <div class="form-group">
+        <label>Sport Type</label>
+        <select id="editFieldSport">
+          <option value="football">Football</option>
+          <option value="badminton">Badminton</option>
+          <option value="basketball">Basketball</option>
+          <option value="futsal">Futsal</option>
+          <option value="volleyball">Volleyball</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Price per Hour (฿)</label>
+        <input type="number" id="editFieldPrice" placeholder="500">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="editFieldStatus">
+          <option value="available">Available</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+      </div>
+
+      <!-- Province (77 Provinces) & Google Maps URL -->
+      <div class="form-group">
+        <label>Province <span style="color:red">*</span></label>
+        <select id="editFieldProvince"></select>
+      </div>
+      <div class="form-group">
+        <label>Location Link (Google Maps URL)</label>
+        <input type="url" id="editFieldMapUrl" placeholder="e.g. https://maps.app.goo.gl/... ">
+      </div>
+
+      <!-- 2. Receiving Bank Account -->
+      <div
+        style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 15px;">
+        <h4 style="margin: 0 0 10px 0; font-size: 0.9rem;">Facility Bank Account</h4>
+        <div class="form-group">
+          <label style="font-size: 0.8rem;">Bank / PromptPay</label>
+          <select id="editFieldBankName">
+            <option value="">-- Select Bank --</option>
+            <option value="PromptPay (พร้อมเพย์)">PromptPay</option>
+            <option value="KBank (กสิกรไทย)">Kasikornbank (KBank)</option>
+            <option value="SCB (ไทยพาณิชย์)">Siam Commercial Bank (SCB)</option>
+            <option value="BBL (กรุงเทพ)">Bangkok Bank (BBL)</option>
+            <option value="KTB (กรุงไทย)">Krungthai Bank (KTB)</option>
+            <option value="BAY (กรุงศรี)">Bank of Ayudhya (Krungsri / BAY)</option>
+            <option value="TTB (ทหารไทยธนชาต)">TMBThanachart Bank (ttb)</option>
+            <option value="GSB (ออมสิน)">Government Savings Bank (GSB)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="font-size: 0.8rem;">Account No. / PromptPay ID</label>
+          <input type="text" id="editFieldBankAccount" placeholder="e.g. 012-3-45678-9 or 0812345678">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.8rem;">Account Name</label>
+          <input type="text" id="editFieldAccountName" placeholder="e.g. John Doe">
+        </div>
+      </div>
+
+      <!-- 3. Facility Description -->
+      <div class="form-group" style="margin-top: 15px;">
+        <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; display: block;">Facility Description</label>
+        <textarea id="editFieldDesc" placeholder="Enter details about the facility..."
+          style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; min-height: 70px; resize: vertical;"></textarea>
+      </div>
+
+      <!-- 4. Amenities -->
+      <div class="form-group" style="margin-top: 15px;">
+        <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block;">Amenities</label>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" name="editFacilityAmenity" value="ที่จอดรถยนต์"
+              style="accent-color: #8B2522; width: 16px; height: 16px;">
+            <span>🚗 Car Parking</span>
+          </label>
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" name="editFacilityAmenity" value="ห้องน้ำในตัว"
+              style="accent-color: #8B2522; width: 16px; height: 16px;">
+            <span>🚻 Restrooms</span>
+          </label>
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" name="editFacilityAmenity" value="ร้านสะดวกซื้อใกล้ๆ"
+              style="accent-color: #8B2522; width: 16px; height: 16px;">
+            <span>🏪 Nearby Convenience Store</span>
+          </label>
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" name="editFacilityAmenity" value="อุปกรณ์ให้ยืม"
+              style="accent-color: #8B2522; width: 16px; height: 16px;">
+            <span>🏸 Equipment Rental</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 5. Image Upload in Edit Modal -->
+      <div class="form-group" style="margin-top: 15px;">
+        <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; display: block;">Facility Images (Max
+          4)</label>
+
+        <div class="upload-area" id="editFacilityImageUploadBox"
+          onclick="document.getElementById('editFacilityImageUpload').click()"
+          style="border: 2px dashed #ddd; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; background: #fafafa;">
+          <i data-lucide="image" width="24" height="24" style="color: #888;"></i>
+          <p style="margin: 4px 0 0; font-size: 0.85rem; color: #555;">Click to upload photos</p>
+          <p style="margin: 2px 0 0; font-size: 0.72rem; color: #999;">PNG, JPG up to 5MB (Max 4 images)</p>
+        </div>
+
+        <input type="file" id="editFacilityImageUpload" style="display:none" accept="image/*" multiple
+          onchange="handleEditFacilityImages(event)">
+
+        <!-- Image preview list -->
+        <div id="editFacilityImagePreviewList" style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+        </div>
+      </div>
+
+      <div class="flex gap-8 mt-16">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('editFacilityModal')">Cancel</button>
+        <button class="btn btn-primary" style="flex:1" onclick="submitEditFacility()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎫 Booking Ticket Modal -->
+  <div class="modal-overlay" id="bookingTicketModal">
+    <div class="modal ticket-modal-box">
+      <!-- Ticket Header -->
+      <div
+        style="background: var(--primary); color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+        <div>
+          <div style="font-size: 0.72rem; opacity: 0.85; letter-spacing: 0.06em; text-transform: uppercase;">Sport
+            Circle E-Ticket</div>
+          <h3 style="margin: 2px 0 0 0; font-size: 1.15rem; color: white;">Booking Confirmation E-Ticket</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="ticketStatusBadge"
+            style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;">APPROVED</span>
+          <button type="button" onclick="closeModal('bookingTicketModal')" aria-label="Close ticket"
+            style="width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.25); color: #fff; border: 1.5px solid rgba(255,255,255,0.6); font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">✕</button>
+        </div>
+      </div>
+
+      <!-- Ticket Body -->
+      <div id="bookingTicketBody" class="ticket-modal-body">
+        <!-- Populated by JavaScript -->
+      </div>
+
+      <!-- Ticket Footer -->
+      <div id="bookingTicketFooter"
+        style="padding: 14px 20px; background: #f8f9fa; border-top: 1px solid #eee; display: flex; gap: 10px; flex-shrink: 0;">
+        <button class="btn btn-secondary" style="flex: 1;"
+          onclick="closeModal('bookingTicketModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slot Detail & Booking Management Modal -->
+  <div class="modal-overlay" id="slotDetailModal">
+    <div class="modal" style="max-width: 520px; width: 100%; border-radius: 16px; overflow: hidden; padding: 0;">
+      <div id="slotDetailHeader"
+        style="padding: 16px 20px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1.1rem; color: white;" id="slotModalTitle">Booking Slot Details</h3>
+        <button type="button" onclick="closeModal('slotDetailModal')"
+          style="background: none; border: none; font-size: 1.4rem; color: white; cursor: pointer;">✕</button>
+      </div>
+      <div id="slotDetailBody" style="padding: 20px; max-height: 75vh; overflow-y: auto;">
+        <!-- Filled by JS -->
+      </div>
+      <div id="slotDetailFooter"
+        style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Walk-in Booking Modal -->
+  <div class="modal-overlay" id="walkInModal">
+    <div class="modal" style="max-width: 500px; width: 100%; border-radius: 16px; padding: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 1.15rem; color: var(--text);">⚡ Walk-in Court Booking</h3>
+        <button type="button" onclick="closeModal('walkInModal')"
+          style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary); cursor: pointer;">✕</button>
+      </div>
+      <div
+        style="background: #f1f5f9; padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; font-size: 0.88rem;">
+        <div>🏟️ Facility: <strong id="walkInFacilityName">-</strong></div>
+        <div style="margin-top: 4px;">⏰ Time Slot: <strong id="walkInTimeSlot">-</strong> (<span
+            id="walkInDateStr">-</span>)</div>
+      </div>
+      <form onsubmit="handleWalkInSubmit(event)">
+        <input type="hidden" id="walkInFacilityId">
+        <input type="hidden" id="walkInDate">
+        <input type="hidden" id="walkInStart">
+        <input type="hidden" id="walkInEnd">
+        <div class="form-group">
+          <label>Customer Name <span style="color:red">*</span></label>
+          <input type="text" id="walkInCustomerName" placeholder="e.g. John Doe (Walk-in)" required>
+        </div>
+        <div class="form-group">
+          <label>Phone Number <span style="color:red">*</span></label>
+          <input type="tel" id="walkInCustomerPhone" placeholder="e.g. 0812345678" required>
+        </div>
+
+        <!-- 📦 Add-on Equipment Selection -->
+        <div id="walkInAddonsSection"
+          style="display:none; margin-bottom: 16px; padding: 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:0.84rem; font-weight:700; color:#0f172a;">📦 Add-on Equipment (Rent / Buy)</span>
+            <span id="walkInAddonSummaryBadge"
+              style="font-size:0.78rem; font-weight:700; color:var(--primary); background:#e0f2fe; padding:2px 8px; border-radius:12px;">+฿0</span>
+          </div>
+          <div id="walkInAddonsList"
+            style="display:flex; flex-direction:column; gap:8px; max-height:170px; overflow-y:auto;"></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Total Amount (฿) <span style="color:red">*</span></label>
+            <input type="number" id="walkInPrice" required>
+          </div>
+          <div class="form-group">
+            <label>Payment Method <span style="color:red">*</span></label>
+            <select id="walkInPaymentMethod">
+              <option value="cash">💵 Cash (Paid)</option>
+              <option value="transfer">📱 Bank Transfer / QR (Paid)</option>
+              <option value="pending">⏳ Unpaid / Pending</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label>Check-in Status</label>
+          <select id="walkInCheckInStatus">
+            <option value="completed">✓ Check In Immediately</option>
+            <option value="approved">⏳ Await Check-in (Advance Booking)</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button type="button" class="btn btn-secondary" style="flex: 1;"
+            onclick="closeModal('walkInModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="flex: 1.5;" id="walkInSubmitBtn">💾 Save Booking</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =======================================================
+       NOTIFICATION DRAWER & BACKDROP
+       ======================================================= -->
+  <div class="notif-backdrop" id="notifBackdrop" onclick="toggleNotificationDrawer(false)"></div>
+  <aside class="notif-drawer" id="notifDrawer">
+    <div class="notif-drawer-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="notif-header-icon"><i data-lucide="bell" width="20" height="20"></i></div>
+        <div>
+          <h3 style="margin:0; font-size:1.15rem; color:var(--text); font-weight:800;">Notifications</h3>
+          <span class="notif-header-subtitle" id="notifRoleSubtitle">Real-time Notification Center</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button type="button" class="notif-mark-read-btn" onclick="markAllNotificationsAsRead()"
+          title="Mark all as read">
+          <i data-lucide="check-check" width="16" height="16"></i> Mark All Read
+        </button>
+        <button type="button" class="notif-close-btn" onclick="toggleNotificationDrawer(false)"
+          aria-label="Close notifications">✕</button>
+      </div>
+    </div>
+
+    <!-- Filter Tabs: All / Unread -->
+    <div class="notif-tabs">
+      <button type="button" class="notif-tab active" id="tabNotifAll" onclick="filterNotifTab('all')">All (<span
+          id="notifTotalCount">0</span>)</button>
+      <button type="button" class="notif-tab" id="tabNotifUnread" onclick="filterNotifTab('unread')">Unread (<span
+          id="notifUnreadCount">0</span>)</button>
+    </div>
+
+    <!-- Notification List -->
+    <div class="notif-list-container" id="notifListContainer">
+      <div style="text-align:center; padding:40px 20px; color:var(--text-tertiary);">
+        <i data-lucide="bell-off" width="36" height="36" style="opacity:0.4; margin-bottom:8px;"></i>
+        <div>Loading notifications...</div>
+      </div>
+    </div>
+
+    <!-- Notification Drawer Footer -->
+    <div class="notif-drawer-footer">
+      <button type="button" class="btn btn-secondary btn-block" onclick="refreshNotifications(true)"
+        style="font-size:0.82rem; padding:8px 14px; display:flex; align-items:center; justify-content:center; gap:6px;">
+        <i data-lucide="refresh-cw" width="14" height="14"></i> Refresh Notifications
+      </button>
+    </div>
+  </aside>
+
+  <!-- Floating Report Issue Button -->
+  <button type="button" id="reportIssueFab" class="report-fab" style="display:none" onclick="openReportIssueModal()" title="Report Website Issue">
+    <span class="report-fab-icon">💬</span>
+    <span class="report-fab-text">Report Issue</span>
+  </button>
+
+  <!-- Report Issue Modal -->
+  <div class="report-modal-backdrop" id="reportModalBackdrop" onclick="if(event.target===this) closeReportIssueModal()">
+    <div class="report-modal" role="dialog" aria-modal="true">
+      <div class="report-modal-header">
+        <div class="report-modal-icon">🛠️</div>
+        <div>
+          <h3>Report Website Issue</h3>
+          <p>Let us know about any issue you encountered and we will resolve it as soon as possible</p>
+        </div>
+        <button type="button" class="report-modal-close" onclick="closeReportIssueModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="report-modal-body">
+        <div class="report-field">
+          <label for="reportCategory">Issue Category <span class="req">*</span></label>
+          <select id="reportCategory">
+            <option value="booking">📅 Court / Time Slot Booking</option>
+            <option value="payment">💳 Payment / Transfer Slip</option>
+            <option value="bug">🐞 Website Bug</option>
+            <option value="other">💬 Other</option>
+          </select>
+        </div>
+        <div class="report-field">
+          <label for="reportDescription">Issue Description <span class="req">*</span></label>
+          <textarea id="reportDescription" rows="4" maxlength="1000" placeholder="Describe the issue you encountered, e.g., which page, what action you took, and what happened..."></textarea>
+          <div class="report-char-count"><span id="reportDescCount">0</span>/1000</div>
+        </div>
+        <div class="report-field">
+          <label>Screenshot <span class="opt">Optional</span></label>
+          <div class="report-upload-box" id="reportUploadBox" onclick="document.getElementById('reportImageInput').click()">
+            <input type="file" id="reportImageInput" accept="image/*" style="display:none" onchange="handleReportImageSelect(event)">
+            <div class="report-upload-inner" id="reportUploadInner">
+              <span style="font-size:1.6rem;">📷</span>
+              <span>Click to attach an image (Max 5MB)</span>
+            </div>
+            <img id="reportImagePreview" class="report-image-preview" style="display:none" alt="preview">
+            <button type="button" class="report-image-remove" id="reportImageRemove" style="display:none" onclick="event.stopPropagation(); clearReportImage()">✕ Remove</button>
+          </div>
+        </div>
+      </div>
+      <div class="report-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeReportIssueModal()">Cancel</button>
+        <button type="button" class="btn btn-primary report-submit-btn" id="reportSubmitBtn" onclick="submitReportIssue()">
+          <span id="reportSubmitText">Submit Report</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Load Data first, then main application logic -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+  <script src="equip-dashboard.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</body>
+
+</html>
