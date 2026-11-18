@@ -1,69 +1,52 @@
-# Sport Circle 🏟️
-**An Integrated Online Sports Facility Booking, Equipment Inventory, and Court Management Platform**
+# 🏟️ Sport Circle — ระบบจองสนามกีฬาและบริหารจัดการคอร์ทออนไลน์
 
-🏆 **First Prize Winner (1st Place)** — **DBI Day 2026**, Digital Business Innovation, Maejo University  
-🌐 **Live Demo:** [https://sport-circle-website-yh26.onrender.com](https://sport-circle-website-yh26.onrender.com)
+เว็บแอปพลิเคชันสำหรับค้นหา จองสนามกีฬา และบริหารจัดการอุปกรณ์กีฬาแบบครบวงจร พร้อมระบบตรวจสอบสลิปการโอนเงินอัตโนมัติด้วย AI
 
----
-
-## 🏆 Achievements & Recognition
-<img width="828" height="608" alt="DBI Day 2026 First Prize Award" src="https://github.com/user-attachments/assets/5569702f-2c6a-4085-b6dd-edb22f0e9ffc" />
-
-* **First Prize Winner (🥇 1st Place):** Digital Innovation & System Presentation Competition at **DBI Day 2026**
+🔗 **ลิงก์ทดลองใช้งานเว็บไซต์ (Live Demo):** https://sport-circle-lastest.onrender.com
 
 ---
 
-## 📋 Overview
-**Sport Circle** is a full-featured web application designed for real-time sports facility booking, court schedule management, sports equipment rental/retail inventory control, and financial reconciliation. Built with Role-Based Access Control (RBAC), the platform supports four distinct user roles—**Customer (User)**, **Facility Owner (Owner)**, **Venue Staff (Staff)**, and **System Administrator (Admin)**—and integrates automated payment slip verification powered by **Google Gemini AI**.
+## 🔑 บัญชีสำหรับทดสอบระบบ (Demo Accounts)
+
+อาจารย์สามารถใช้บัญชีด้านล่างเพื่อทดสอบระบบตามสิทธิ์การใช้งานแต่ละบทบาทได้ทันทีครับ:
+
+| บทบาท (Role) | อีเมล (Email) | รหัสผ่าน (Password) | หมายเหตุ |
+| :--- | :--- | :--- | :--- |
+| **Admin (เจ้าของระบบ)** | `superman@gmail.com` | `123456` | ดูภาพรวมแพลตฟอร์ม, จัดการสิทธิ์ผู้ใช้ และดูรายงานปัญหา |
+| **Owner (เจ้าของสนาม)** | `man@gmail.com` | `123123` | จัดการสนาม/อุปกรณ์, ตรวจสลิป, เช็คอิน QR, ปิดกะ และออกรายงาน PDF/DOCX |
+| **User (ลูกค้าทั่วไป)** | *สมัครสมาชิกใหม่ได้ทันที* | *ตั้งรหัสผ่านเอง* | กดที่แท็บ **"สมัครสมาชิก"** บนหน้าแรกของเว็บไซต์เพื่อสร้างบัญชีทดสอบได้เลยครับ |
 
 ---
 
-## 🛠️ Tech Stack
-* **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+), Chart.js, Lucide Icons, `html5-qrcode`, `html2pdf.js`, `docx.js`
-* **Backend:** Node.js HTTP Server (`server.js`) providing a REST API endpoint (`/api/verify-slip`) powered by the Google Gemini API (`gemini-3.5-flash-lite`)
-* **Database & BaaS:** Supabase (PostgreSQL, Authentication, Real-time Subscriptions, Storage)
-* **Deployment:** Render (Cloud Web Service)
+## 👥 บทบาทผู้ใช้งานในระบบ (User Roles)
+1. **ลูกค้า (User):** ค้นหาสนามกีฬาตามประเภทกีฬาและจังหวัด ตรวจสอบตารางเวลาว่างแบบ Real-time จองสนามพร้อมเช่า/ซื้ออุปกรณ์เสริม อัปโหลดสลิปชำระเงิน และรับตั๋ว E-Ticket
+2. **เจ้าของสนาม (Owner):** จัดการข้อมูลสนามกีฬาและสต็อกอุปกรณ์ ตรวจสอบรายการจองผ่านตาราง Matrix รายวัน บันทึกการจองหน้างาน (Walk-in) สแกน QR Code เช็คอิน บริหารกะงาน (Shift Management) และส่งออกรายงานสรุปผลประกอบการ (PDF / DOCX)
+3. **ผู้ดูแลระบบแพลตฟอร์ม (Admin):** ดูภาพรวมและสถิติของแพลตฟอร์ม จัดการสิทธิ์ผู้ใช้งาน (Role Management) และตรวจสอบรายงานปัญหาจากผู้ใช้งาน
 
 ---
 
-## ✨ Key Features
-
-### 1. Customer Portal (User)
-* **Search & Filter Facilities:** Browse sports venues by sport category (Football, Badminton, Basketball, Futsal, Volleyball) and filter by province across Thailand.
-* **Real-Time Court Booking & Equipment Add-ons:** View facility photos, amenities, and interactive Google Maps; select dates and hourly time slots in real time; and rent or purchase add-on sports equipment with automatic time-slot stock reservation and deduction.
-* **AI Payment Slip Verification & E-Ticket:** Upload bank transfer slips for instant verification of payment authenticity and amount via Google Gemini AI, receiving a digital E-Ticket with a QR Code for venue check-in.
-* **Booking History:** Track past and upcoming reservations and real-time check-in statuses at any time.
-
-### 2. Facility Owner & Admin Suite (Owner & Admin)
-* **Equipment & Financial Management Dashboard (`equip-dashboard.js`):** A comprehensive 6-tab control center covering Equipment & Retail Inventory, Active Rentals & Returns, Damages/Repairs & Penalty Fees, Cash Shift & Payment Channel Reconciliation, Customer Consolidated Folios, and Visual Analytics.
-* **Executive Report Exports:** Instantly export statistical, financial, and inventory summary reports in **PDF** and **DOCX (Microsoft Word)** formats.
-* **Multi-Court Matrix Schedule:** Real-time hourly court occupancy matrix supporting walk-in bookings and post-booking equipment add-ons.
-* **User & Role Administration:** Manage user roles (Admin, Owner, Staff, User), monitor platform-wide KPIs, and handle customer support tickets.
-
-### 3. Venue Operations & Check-In (Staff)
-* **QR Code Check-In Scanner:** Scan customer E-Ticket QR codes using a mobile/device camera or search by phone number, customer name, or booking reference to verify identity and record hourly check-ins.
+## ✨ ฟีเจอร์เด่นของระบบ
+* **AI Slip Verification:** เชื่อมต่อ Gemini API ผ่าน Node.js Backend (`/api/verify-slip`) เพื่อตรวจสอบความถูกต้องและยอดเงินบนสลิปโอนเงินอัตโนมัติ
+* **Real-time Slot & Stock Calculation:** คำนวณช่วงเวลาว่างและจำนวนสต็อกอุปกรณ์ให้เช่า/ซื้อแบบอัตโนมัติตามช่วงเวลาที่เลือก ป้องกันการจองซ้ำซ้อน
+* **QR Code Check-in:** ระบบออก E-Ticket พร้อม QR Code และตัวสแกนผ่านกล้องเว็บแคม/มือถือสำหรับเช็คอินหน้าสนาม
+* **Executive Dashboard & Reports:** แสดงกราฟวิเคราะห์รายได้และสรุปข้อมูลแยกตามสนาม พร้อมส่งออกเอกสารรายงานเป็นไฟล์ PDF และ Word (.doc)
 
 ---
 
-## 📂 Project Structure
-* `index.html` : Main single-page application layout containing all views and modals
-* `app.js` : Core frontend logic (Authentication, Booking Engine, State Management, UI Rendering, AI Slip Verification)
-* `data.js` : Seed data structures and default platform configurations
-* `equip-dashboard.js` : Admin facility & equipment management dashboard, cash shift reconciliation, consolidated folios, and PDF/DOCX report generator
-* `server.js` : Node.js static file server and `/api/verify-slip` endpoint integrating Google Gemini AI
-* `style.css` : Modern, responsive stylesheet with a clean blue-and-white theme
-* `package.json` : Project metadata, scripts, and dependencies
+## 🛠️ เทคโนโลยีที่ใช้พัฒนา (Tech Stack)
+* **Frontend:** HTML5, CSS3 (Responsive Design), Vanilla JavaScript, Chart.js, Lucide Icons, HTML5-QRCode
+* **Backend:** Node.js (Native HTTP Server & REST API)
+* **Database & Storage:** Supabase (PostgreSQL, Authentication, Storage Buckets, RPC)
+* **AI Integration:** Google Gemini API
+* **Deployment:** Render
 
 ---
 
-## 🚀 Local Setup & Installation
-1. Install dependencies via Node.js:
-   ```bash
-   npm install
-   ```
-2. Set your Google Gemini API key and start the server:
-   ```bash
-   export GEMINI_API_KEY="your_api_key_here"
-   npm start
-   ```
-3. Open `http://localhost:3000` in your browser.
+## 📂 โครงสร้างไฟล์หลัก
+* `index.html` — โครงสร้างหน้าเว็บหลักและหน้าต่างจัดการตามสิทธิ์ผู้ใช้งาน
+* `style.css` — สไตล์ชีตและการออกแบบ Responsive รองรับทั้ง Desktop และ Mobile
+* `app.js` — ลอจิกหลักฝั่ง Frontend การยืนยันตัวตน การจองสนาม ระบบแจ้งเตือน และ QR Check-in
+* `equip-dashboard.js` — ระบบแดชบอร์ดบริหารสต็อกอุปกรณ์ การเงิน กะงาน และการส่งออกรายงาน PDF/DOCX
+* `data.js` — โครงสร้างข้อมูลและชุดข้อมูลเริ่มต้น
+* `server.js` — เซิร์ฟเวอร์ Node.js สำหรับให้บริการไฟล์เว็บและเชื่อมต่อ API ตรวจสลิป AI
+* `package.json` — ข้อมูลโปรเจกต์และการตั้งค่าสคริปต์สำหรับรันเซิร์ฟเวอร์
